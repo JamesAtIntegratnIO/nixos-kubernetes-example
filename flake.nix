@@ -1,16 +1,26 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.05";
     nixos-generators = {
       url = github:nix-community/nixos-generators;
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    flake-utils.url = "github:numtide/flake-utils";
   };
-  outputs = {
+  outputs = inputs @ {
     self,
     nixpkgs,
+    flake-utils,
     ...
-  }: {
+  }: let
+    system = "x86_64-linux";
+    pkgs = import nixpkgs {inherit system;};
+  in {
+    devShell = pkgs.mkShell {
+      packages = with pkgs; [
+        hugo
+      ];
+    };
     nixosConfigurations = let
       proxmoxImageSettings = {
         name,
@@ -34,6 +44,7 @@
         modules = [
           ./systems/node1
           ./modules/k8s/server.nix
+          ./modules/login.nix
           ({
             modulesPath,
             pkgs,
@@ -53,6 +64,7 @@
         modules = [
           ./systems/node2
           ./modules/k8s/worker.nix
+          ./modules/login.nix
           ({
             modulesPath,
             pkgs,
@@ -72,6 +84,7 @@
         modules = [
           ./systems/node3
           ./modules/k8s/worker.nix
+          ./modules/login.nix
           ({
             modulesPath,
             pkgs,
