@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.05";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-22.11";
     nixos-generators = {
       url = github:nix-community/nixos-generators;
       inputs.nixpkgs.follows = "nixpkgs";
@@ -27,22 +27,22 @@
         #!/usr/bin/env bash
         set -euo pipefail
         read -p 'Enter the IP of the proxmox host: ' proxmox_host
-        read -p 'Enter first node ID - 1#: ' node_id
+        read -p 'Enter first node ID#: ' node_id
         nodes=$(nix flake show --json | jq  '.nixosConfigurations|keys[]')
         echo $nodes | xargs -n 1 | awk -v proxmox_host=$proxmox_host '{print " /tmp/"$1"/vzdump-qemu-"$1".vma.zst root@"proxmox_host":/var/lib/vz/dump/"}' | xargs -L 1 scp
-        echo $nodes | xargs -n 1 | awk -v node_id="$node_id" -v proxmox_host="$proxmox_host" '{print "root@"proxmox_host" qmrestore /var/lib/vz/dump/vzdump-qemu-"$1".vma.zst " NR+node_id}' | xargs -L 1 ssh
+        echo $nodes | xargs -n 1 | awk -v node_id="$node_id" -v proxmox_host="$proxmox_host" '{print "root@"proxmox_host" qmrestore /var/lib/vz/dump/vzdump-qemu-"$1".vma.zst " node_id+i++}' | xargs -L 1 ssh
       '';
       yolo = pkgs.writeShellScriptBin "yolo" ''
         #!/usr/bin/env bash
         set -euo pipefail
 
         read -p 'Enter the IP of the proxmox host: ' proxmox_host
-        read -p 'Enter first node ID - 1#: ' node_id
+        read -p 'Enter first node ID#: ' node_id
         nodes=$(nix flake show --json | jq  '.nixosConfigurations|keys[]')
 
-        echo $nodes | xargs -I {} -P 0 nix build .#nixosConfigurations.{}.config.system.build.VMA -o /tmp/{}
+        nix flake show --json | jq  '.nixosConfigurations|keys[]'| xargs -I {} -P 0 nix build .#nixosConfigurations.{}.config.system.build.VMA -o /tmp/{}
         echo $nodes | xargs -n 1 | awk -v proxmox_host=$proxmox_host '{print " /tmp/"$1"/vzdump-qemu-"$1".vma.zst root@"proxmox_host":/var/lib/vz/dump/"}' | xargs -L 1 scp
-        echo $nodes | xargs -n 1 | awk -v node_id="$node_id" -v proxmox_host="$proxmox_host" '{print "root@"proxmox_host" qmrestore /var/lib/vz/dump/vzdump-qemu-"$1".vma.zst " NR+node_id}' | xargs -L 1 ssh
+        echo $nodes | xargs -n 1 | awk -v node_id="$node_id" -v proxmox_host="$proxmox_host" '{print "root@"proxmox_host" qmrestore /var/lib/vz/dump/vzdump-qemu-"$1".vma.zst " node_id+i++}' | xargs -L 1 ssh
       '';
     in {
       myshell = pkgs.mkShell {
@@ -53,6 +53,7 @@
           make-proxmox-image
           make-cluster-images
           deploy-images
+          yolo
         ];
       };
     };
@@ -69,6 +70,7 @@
           virtio0 = virtio0;
           cores = cores;
           memory = memory;
+          # diskSize = "2000M";
           # additionalSpace = additionalSpace;
         };
       };
@@ -91,7 +93,7 @@
             ];
             proxmox = proxmoxImageSettings {
               name = config.networking.hostName;
-              additionalSpace = "20G";
+              # diskSize = "20G";
             };
           })
         ];
@@ -114,7 +116,7 @@
             ];
             proxmox = proxmoxImageSettings {
               name = config.networking.hostName;
-              additionalSpace = "20G";
+              # diskSize = "20G";
             };
           })
         ];
@@ -137,7 +139,7 @@
             ];
             proxmox = proxmoxImageSettings {
               name = config.networking.hostName;
-              additionalSpace = "20G";
+              # diskSize = "20G";
             };
           })
         ];
