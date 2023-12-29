@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-22.11";
+    nixpkgs.url = "github:nixos/nixpkgs/master";
     nixos-generators = {
       url = github:nix-community/nixos-generators;
       inputs.nixpkgs.follows = "nixpkgs";
@@ -63,14 +63,15 @@
         virtio0 ? "local-zfs",
         cores ? 4,
         memory ? 4096,
-        additionalSpace ? "2000M",
+        # additionalSpace ? "2000M",
+        diskSize ? "20480",
       }: {
         qemuConf = {
           name = name;
           virtio0 = virtio0;
           cores = cores;
           memory = memory;
-          # diskSize = "2000M";
+          diskSize = diskSize;
           # additionalSpace = additionalSpace;
         };
       };
@@ -93,7 +94,6 @@
             ];
             proxmox = proxmoxImageSettings {
               name = config.networking.hostName;
-              # diskSize = "20G";
             };
           })
         ];
@@ -116,7 +116,6 @@
             ];
             proxmox = proxmoxImageSettings {
               name = config.networking.hostName;
-              # diskSize = "20G";
             };
           })
         ];
@@ -139,7 +138,6 @@
             ];
             proxmox = proxmoxImageSettings {
               name = config.networking.hostName;
-              # diskSize = "20G";
             };
           })
         ];

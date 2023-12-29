@@ -17,6 +17,7 @@
 
   boot.supportedFilesystems = ["nfs"];
   services.rpcbind.enable = true;
+  services.cloud-init.network.enable = true;
 
   environment.systemPackages = with pkgs; [
     tmux
